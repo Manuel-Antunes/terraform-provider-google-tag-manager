@@ -3,11 +3,12 @@
 page_title: "gtm_trigger Resource - terraform-provider-google-tag-manager"
 subcategory: ""
 description: |-
-  
+  Manages a Google Tag Manager trigger.
 ---
 
 # gtm_trigger (Resource)
 
+Manages a Google Tag Manager trigger within a workspace.
 
 
 ## Example Usage
@@ -196,3 +197,11 @@ Optional:
 
 <a id="nestedatt--custom_event_filter--parameter--map--value--map"></a>
 ### Nested Schema for `custom_event_filter.parameter.map.value.map`
+
+## Import
+
+GTM Triggers can be imported using the trigger ID, e.g.
+
+```
+$ terraform import gtm_trigger.example 123456
+```

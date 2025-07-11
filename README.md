@@ -8,6 +8,7 @@ This provider allows you to manage Google Tag Manager resources using Terraform.
 - Manage GTM Tags
 - Manage GTM Triggers
 - Manage GTM Variables
+- Import existing GTM resources into Terraform state
 
 ## Requirements
 
@@ -74,6 +75,64 @@ make setup-env
 # Edit the .env file with your credentials
 nano .env
 ```
+
+## Importing Existing Resources
+
+This provider supports importing existing Google Tag Manager resources into your Terraform state, allowing you to manage pre-existing resources with Terraform.
+
+### Import Syntax
+
+To import a resource, use the `terraform import` command with the resource address and the resource ID:
+
+```bash
+terraform import [resource_type].[resource_name] [resource_id]
+```
+
+### Importable Resources
+
+The following resources can be imported:
+
+#### Tags
+
+```bash
+terraform import gtm_tag.example [tag_id]
+```
+
+#### Triggers
+
+```bash
+terraform import gtm_trigger.example [trigger_id]
+```
+
+#### Variables
+
+```bash
+terraform import gtm_variable.example [variable_id]
+```
+
+### Import Example
+
+1. First, define an empty resource block in your configuration:
+
+```hcl
+resource "gtm_tag" "imported_tag" {
+  # The attributes will be filled in by Terraform after import
+}
+```
+
+2. Run the import command:
+
+```bash
+terraform import gtm_tag.imported_tag 1234567890
+```
+
+3. Run `terraform plan` to see what attributes Terraform detected and what might need to be adjusted:
+
+```bash
+terraform plan
+```
+
+4. Update your configuration with the necessary attributes to match the imported resource.
 
 ## Testing
 

@@ -3,11 +3,12 @@
 page_title: "gtm_tag Resource - terraform-provider-google-tag-manager"
 subcategory: ""
 description: |-
-  
+  Manages a Google Tag Manager tag.
 ---
 
 # gtm_tag (Resource)
 
+Manages a Google Tag Manager tag within a workspace.
 
 
 ## Example Usage
@@ -201,3 +202,11 @@ Optional:
 
 <a id="nestedatt--parameter--map--map--map"></a>
 ### Nested Schema for `parameter.map.map.value`
+
+## Import
+
+GTM Tags can be imported using the tag ID, e.g.
+
+```
+$ terraform import gtm_tag.example 123456
+```

@@ -3,10 +3,12 @@
 page_title: "gtm_variable Resource - terraform-provider-google-tag-manager"
 subcategory: ""
 description: |-
-  
+  Manages a Google Tag Manager variable.
 ---
 
 # gtm_variable (Resource)
+
+Manages a Google Tag Manager variable within a workspace.
 
 
 
@@ -177,3 +179,11 @@ Optional:
 
 <a id="nestedatt--parameter--map--map--map"></a>
 ### Nested Schema for `parameter.map.map.value`
+
+## Import
+
+GTM Variables can be imported using the variable ID, e.g.
+
+```
+$ terraform import gtm_variable.example 123456
+```

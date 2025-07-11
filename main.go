@@ -11,6 +11,6 @@ import (
 
 func main() {
 	providerserver.Serve(context.Background(), provider.New, providerserver.ServeOpts{
-		Address: "registry.terraform.io/mirefly/google-tag-manager",
+		Address: "registry.terraform.io/manuelantunes/google-tag-manager",
 	})
 }
