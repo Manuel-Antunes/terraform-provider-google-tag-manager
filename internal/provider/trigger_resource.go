@@ -162,6 +162,26 @@ func (r *triggerResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
+func (r *triggerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	triggerId := req.ID
+
+	if triggerId == "" {
+		resp.Diagnostics.AddError("Error Importing Trigger", "Trigger ID cannot be empty")
+		return
+	}
+
+	trigger, err := r.client.Trigger(triggerId)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Importing Trigger", err.Error())
+		return
+	}
+
+	resource := toResourceTrigger(trigger)
+
+	diags := resp.State.Set(ctx, &resource)
+	resp.Diagnostics.Append(diags...)
+}
+
 // Equal compares the trigger resource model with the given resource model
 func (m resourceTriggerModel) Equal(o resourceTriggerModel) bool {
 	if !m.Name.Equal(o.Name) ||

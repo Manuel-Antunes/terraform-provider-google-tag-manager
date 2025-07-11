@@ -278,7 +278,7 @@ func TestAccVariableResource_update(t *testing.T) {
 			{
 				Config: testAccVariableResourceUpdateConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("gtm_variable.test", "id"),
+					resource.TestCheckResourceAttrSet("gtm_variable.test", "123"),
 					resource.TestCheckResourceAttr("gtm_variable.test", "name", "tf-test-variable-updated"),
 					resource.TestCheckResourceAttr("gtm_variable.test", "notes", "Updated by Terraform"),
 					// Check updated parameters
@@ -411,38 +411,35 @@ resource "gtm_tag" "test" {
   type  = "gaawe"
   notes = "Created by Terraform"
   
-  parameter {
+  parameter = [
+	{
     key   = "eventName"
     type  = "template"
     value = "test_event"
-  }
-  
-  parameter {
+  },
+	 {
     key   = "measurementIdOverride"
     type  = "template"
     value = "G-XXXXXX"
-  }
-  
-  parameter {
+  },
+	{
     key  = "eventParameters"
     type = "list"
-    
-    list {
+    list = [{
       type = "map"
       
-      map {
+      map = [{
         key   = "name"
         type  = "template"
         value = "param-name"
-      }
-      
-      map {
+      },{
         key   = "value"
         type  = "template"
         value = "param-value"
-      }
-    }
+      }]
+    }]
   }
+	]
 }
 `
 }
@@ -454,17 +451,16 @@ resource "gtm_tag" "test" {
   type  = "gaawe"
   notes = "Updated by Terraform"
   
-  parameter {
+  parameter = [
+	{
     key   = "eventName"
     type  = "template"
     value = "updated_event"
-  }
-  
-  parameter {
+  }, {
     key   = "measurementIdOverride"
     type  = "template"
     value = "G-XXXXXX"
-  }
+  }]
 }
 `
 }
@@ -476,17 +472,15 @@ resource "gtm_variable" "test" {
   type  = "v"
   notes = "Created by Terraform"
   
-  parameter {
+  parameter = [{
     key   = "name"
     type  = "template"
     value = "test-param"
-  }
-  
-  parameter {
+  }, {
     key   = "value"
     type  = "template"
     value = "test-value"
-  }
+  }]
 }
 `
 }
@@ -498,17 +492,16 @@ resource "gtm_variable" "test" {
   type  = "v"
   notes = "Updated by Terraform"
   
-  parameter {
+  parameter = [{
     key   = "name"
     type  = "template"
     value = "updated-param"
-  }
-  
-  parameter {
+  },
+  {
     key   = "value"
     type  = "template"
     value = "updated-value"
-  }
+  }]
 }
 `
 }
@@ -531,7 +524,7 @@ resource "gtm_trigger" "test" {
         {
           type  = "template",
           key   = "arg1",
-          value = "event-name"
+          value = "test-event"
         }
       ]
     }
@@ -563,54 +556,47 @@ resource "gtm_tag" "complex" {
   type  = "gaawe"
   notes = "Created by Terraform with complex parameters"
   
-  parameter {
-    key   = "eventName"
-    type  = "template"
-    value = "complex_event"
-  }
-  
-  parameter {
-    key   = "measurementIdOverride"
-    type  = "template"
-    value = "G-XXXXXX"
-  }
-  
-  parameter {
-    key  = "eventParameters"
-    type = "list"
-    
-    list {
-      type = "map"
-      
-      map {
-        key   = "name"
-        type  = "template"
-        value = "param1"
-      }
-      
-      map {
-        key   = "value"
-        type  = "template"
-        value = "value1"
-      }
-    }
-    
-    list {
-      type = "map"
-      
-      map {
-        key   = "name"
-        type  = "template"
-        value = "param2"
-      }
-      
-      map {
-        key   = "value"
-        type  = "template"
-        value = "value2"
-      }
-    }
-  }
-}
+  parameter  = [
+		{
+			key   = "eventName"
+			type  = "template"
+			value = "complex_event"
+		},
+		{
+			key   = "measurementIdOverride"
+			type  = "template"
+			value = "G-XXXXXX"
+		}, 
+		{
+			key  = "eventParameters"
+			type = "list"
+			
+			list = [{
+				type = "map"
+				
+				map = [{
+					key   = "name"
+					type  = "template"
+					value = "param1"
+				},{
+					key   = "value"
+					type  = "template"
+					value = "value1"
+				}]
+			},{
+				type = "map"
+				
+				map = [{
+					key   = "name"
+					type  = "template"
+					value = "param2"
+				}, {
+					key   = "value"
+					type  = "template"
+					value = "value2"
+				}]
+			}]
+		}
+	]
 `
 }

@@ -81,7 +81,7 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	tag, err := r.client.CreateTag(toApiTag(plan))
+	tag, err := r.client.CreateTag(toApiTag(plan, false))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Tag", err.Error())
 		return
@@ -133,7 +133,7 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	tag, err := r.client.UpdateTag(state.Id.ValueString(), toApiTag(plan))
+	tag, err := r.client.UpdateTag(state.Id.ValueString(), toApiTag(plan, true))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Tag", err.Error())
 		return
@@ -143,6 +143,33 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
+}
+
+func (r *tagResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	if req.ID == "" {
+		resp.Diagnostics.AddError(
+			"Resource Import Missing ID",
+			"This is always an error in the provider. Please report the following to the provider developer:\n\n"+
+				"Resource ImportState method call to ImportState with an empty ID is not allowed.",
+		)
+		return
+	}
+	tag, err := r.client.Tag(req.ID)
+	if err == nil {
+		resp.Diagnostics.AddError(
+			"Resource Import Failed",
+			"Failed to import tag with ID "+req.ID+". The tag does not exist or the ID is invalid.",
+		)
+		return
+	}
+
+	plan := toResourceTag(tag)
+
+	diags := resp.State.Set(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -207,7 +234,17 @@ func toResourceTag(tag *tagmanager.Tag) resourceTagModel {
 
 }
 
-func toApiTag(resource resourceTagModel) *tagmanager.Tag {
+func toApiTag(resource resourceTagModel, id bool) *tagmanager.Tag {
+	if !id {
+		return &tagmanager.Tag{
+			Name:            resource.Name.ValueString(),
+			Type:            resource.Type.ValueString(),
+			Notes:           resource.Notes.ValueString(),
+			Parameter:       toApiParameter(resource.Parameter),
+			FiringTriggerId: unwrapStringArray(resource.FiringTriggerId),
+		}
+	}
+
 	return &tagmanager.Tag{
 		Name:            resource.Name.ValueString(),
 		Type:            resource.Type.ValueString(),

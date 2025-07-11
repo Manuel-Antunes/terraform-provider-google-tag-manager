@@ -80,7 +80,9 @@ func (r *variableResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	variable, err := r.client.CreateVariable(toApiVariable(plan))
+	dto := toApiVariable(plan, false)
+
+	variable, err := r.client.CreateVariable(dto)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Variable", err.Error())
 		return
@@ -132,7 +134,7 @@ func (r *variableResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	variable, err := r.client.UpdateVariable(state.Id.ValueString(), toApiVariable(plan))
+	variable, err := r.client.UpdateVariable(state.Id.ValueString(), toApiVariable(plan, true))
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Variable", err.Error())
 		return
@@ -164,6 +166,26 @@ func (r *variableResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
+func (r *variableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	variableId := req.ID
+
+	if variableId == "" {
+		resp.Diagnostics.AddError("Invalid Import ID", "The import ID cannot be empty.")
+		return
+	}
+
+	variable, err := r.client.Variable(variableId)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Importing Variable", err.Error())
+		return
+	}
+
+	resource := toResourceVariable(variable)
+
+	diags := resp.State.Set(ctx, &resource)
+	resp.Diagnostics.Append(diags...)
+}
+
 // Equal compares the two models and returns true if they are equal.
 func (m resourceVariableModel) Equal(o resourceVariableModel) bool {
 	if !m.Name.Equal(o.Name) ||
@@ -192,7 +214,16 @@ func toResourceVariable(variable *tagmanager.Variable) resourceVariableModel {
 		Parameter: toResourceParameter(variable.Parameter),
 	}
 }
-func toApiVariable(resource resourceVariableModel) *tagmanager.Variable {
+func toApiVariable(resource resourceVariableModel, id bool) *tagmanager.Variable {
+	if !id {
+		return &tagmanager.Variable{
+			Name:      resource.Name.ValueString(),
+			Type:      resource.Type.ValueString(),
+			Notes:     resource.Notes.ValueString(),
+			Parameter: toApiParameter(resource.Parameter),
+		}
+	}
+
 	return &tagmanager.Variable{
 		Name:       resource.Name.ValueString(),
 		Type:       resource.Type.ValueString(),
