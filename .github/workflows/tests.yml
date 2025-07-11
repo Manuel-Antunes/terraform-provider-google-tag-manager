@@ -1,0 +1,61 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Run unit tests
+        run: make test
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: unit-tests
+    env:
+      GTM_CREDENTIAL_FILE: ${{ secrets.GTM_CREDENTIAL_FILE_PATH }}
+      GTM_ACCOUNT_ID: ${{ secrets.GTM_ACCOUNT_ID }}
+      GTM_CONTAINER_ID: ${{ secrets.GTM_CONTAINER_ID }}
+      GTM_WORKSPACE_NAME: ${{ secrets.GTM_WORKSPACE_NAME }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Set up credentials
+        run: |
+          echo "${{ secrets.GTM_CREDENTIALS }}" > ${{ secrets.GTM_CREDENTIAL_FILE_PATH }}
+
+      - name: Install test dependencies
+        run: make install-test-deps
+
+      - name: Run API integration tests
+        run: go test -v -parallel=2 -timeout=15m ./internal/api/...
+
+      # Optional: Only run acceptance tests on specific branches or when enabled via comment
+      - name: Run provider acceptance tests
+        if: contains(github.event.head_commit.message, '[run-acc-tests]')
+        run: TF_ACC=1 go test -v -parallel=1 -timeout 30m ./internal/provider/...
+
+      - name: Clean up credentials
+        if: always()
+        run: rm -f ${{ secrets.GTM_CREDENTIAL_FILE_PATH }}
