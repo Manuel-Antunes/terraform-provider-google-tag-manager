@@ -77,6 +77,7 @@ func (c *Client) workspacePath(id string) string {
 }
 
 func (c *Client) CreateTag(workspaceId string, tag *tagmanager.Tag) (*tagmanager.Tag, error) {
+
 	return getResponseWithRetry(c.Accounts.Containers.Workspaces.Tags.Create(c.workspacePath(workspaceId), tag).Do, c.Options.RetryLimit)
 }
 

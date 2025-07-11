@@ -44,3 +44,4 @@ dist/
 credentials-*.json
 /terraform-provider-gtm
 /terraform-provider-google-tag-manager.code-workspace
+testdata
