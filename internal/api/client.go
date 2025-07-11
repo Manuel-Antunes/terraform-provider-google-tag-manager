@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"google.golang.org/api/googleapi"
@@ -11,11 +12,38 @@ import (
 	"google.golang.org/api/tagmanager/v2"
 )
 
+// Environment variable names for client configuration
+const (
+	EnvCredentialFile = "GTM_CREDENTIAL_FILE"
+	EnvAccountId      = "GTM_ACCOUNT_ID"
+	EnvContainerId    = "GTM_CONTAINER_ID"
+	EnvWorkspaceName  = "GTM_WORKSPACE_NAME"
+	EnvRetryLimit     = "GTM_RETRY_LIMIT"
+)
+
 type ClientOptions struct {
 	CredentialFile string
 	AccountId      string
 	ContainerId    string
 	RetryLimit     int
+}
+
+// NewClientOptionsFromEnv creates ClientOptions from environment variables
+func NewClientOptionsFromEnv() *ClientOptions {
+	retryLimit := 10 // Default retry limit
+	if os.Getenv(EnvRetryLimit) != "" {
+		// Ignoring error handling for simplicity, will use default on error
+		if retryLimitVal, err := fmt.Sscanf(os.Getenv(EnvRetryLimit), "%d", &retryLimit); err != nil || retryLimitVal <= 0 {
+			retryLimit = 10
+		}
+	}
+
+	return &ClientOptions{
+		CredentialFile: os.Getenv(EnvCredentialFile),
+		AccountId:      os.Getenv(EnvAccountId),
+		ContainerId:    os.Getenv(EnvContainerId),
+		RetryLimit:     retryLimit,
+	}
 }
 
 type Client struct {
@@ -33,6 +61,11 @@ func NewClient(opts *ClientOptions) (*Client, error) {
 	}
 
 	return &Client{Service: srv, Options: opts}, nil
+}
+
+// NewClientFromEnv creates a new client using environment variables
+func NewClientFromEnv() (*Client, error) {
+	return NewClient(NewClientOptionsFromEnv())
 }
 
 func (c *Client) containerPath() string {

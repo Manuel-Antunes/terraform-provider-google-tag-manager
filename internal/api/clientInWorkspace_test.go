@@ -2,16 +2,31 @@ package api
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/tagmanager/v2"
 )
 
+// Fallback test client in workspace options if environment variables are not set
 var testClientInWorkspaceOptions = &ClientInWorkspaceOptions{
 	WorkspaceName: "test-client-in-workspace",
 	ClientOptions: testClientOptions,
+}
+
+// Setup test client in workspace options from environment variables or fallback to defaults
+func setupTestClientInWorkspaceOptions() *ClientInWorkspaceOptions {
+	options := NewClientInWorkspaceOptionsFromEnv()
+
+	// If workspace name is not set in environment, use the default test workspace name
+	if options.WorkspaceName == "" {
+		options.WorkspaceName = testClientInWorkspaceOptions.WorkspaceName
+	}
+
+	// Setup client options using the helper function
+	options.ClientOptions = setupTestClientOptions()
+
+	return options
 }
 
 type ClientInWorkspaceTestSuite struct {
@@ -20,7 +35,17 @@ type ClientInWorkspaceTestSuite struct {
 }
 
 func (suite *ClientInWorkspaceTestSuite) SetupSuite() {
-	client, err := NewClientInWorkspace(testClientInWorkspaceOptions)
+	// Wait to prevent rate limiting
+	GlobalTestCoordinator.WaitBeforeRequest()
+
+	// Create client with options from environment or defaults
+	options := setupTestClientInWorkspaceOptions()
+	// Ensure higher retry limit for tests
+	if options.RetryLimit < 10 {
+		options.RetryLimit = 10
+	}
+
+	client, err := NewClientInWorkspace(options)
 	if err != nil {
 		suite.T().Fatalf("Failed to create client in workspace: %v", err)
 	}
@@ -45,6 +70,9 @@ func (suite *ClientInWorkspaceTestSuite) TestNewClientInWorkspace() {
 // Test tag creation
 func (suite *ClientInWorkspaceTestSuite) TestTagCreate() {
 	t := suite.T()
+
+	// Wait before API call to prevent rate limiting
+	GlobalTestCoordinator.WaitBeforeRequest()
 
 	tag, err := suite.client.CreateTag(&tagmanager.Tag{
 		Name:  testName("test-tag-create"),
@@ -216,6 +244,9 @@ func (suite *ClientInWorkspaceTestSuite) TestTagDelete() {
 func (suite *ClientInWorkspaceTestSuite) TestVariableCreate() {
 	t := suite.T()
 
+	// Wait before API call to prevent rate limiting
+	GlobalTestCoordinator.WaitBeforeRequest()
+
 	variable, err := suite.client.CreateVariable(&tagmanager.Variable{
 		Name: testName("test-variable-create"),
 		Type: "v",
@@ -373,6 +404,9 @@ func (suite *ClientInWorkspaceTestSuite) TestVariableDelete() {
 // Test trigger creation
 func (suite *ClientInWorkspaceTestSuite) TestTriggerCreate() {
 	t := suite.T()
+
+	// Wait before API call to prevent rate limiting
+	GlobalTestCoordinator.WaitBeforeRequest()
 
 	trigger, err := suite.client.CreateTrigger(&tagmanager.Trigger{
 		Name:  testName("test-trigger-create"),
@@ -558,10 +592,7 @@ func (suite *ClientInWorkspaceTestSuite) TestTriggerDelete() {
 	assert.Equal(t, ErrNotExist, err)
 }
 
-// Helper function to generate a unique test name based on current time
-func testName(prefix string) string {
-	return prefix + "-" + time.Now().Format("20060102-150405")
-}
+// Using testName function from test_helpers.go
 
 func TestClientInWorkspace(t *testing.T) {
 	suite.Run(t, new(ClientInWorkspaceTestSuite))

@@ -8,14 +8,36 @@ import (
 	"google.golang.org/api/tagmanager/v2"
 )
 
+// Fallback test client options if environment variables are not set
 var testClientOptions = &ClientOptions{
-	CredentialFile: "./testdata/credentials-77b14e38b4dd.json",
-	AccountId:      "6105084028",
-	ContainerId:    "119458552",
+	CredentialFile: "./testdata/google-service-account.json",
+	AccountId:      "6303442487",
+	ContainerId:    "224654212",
+}
+
+// Setup test client options from environment variables or fallback to defaults
+func setupTestClientOptions() *ClientOptions {
+	options := NewClientOptionsFromEnv()
+
+	// If any required field is empty, fall back to the test defaults
+	if options.CredentialFile == "" {
+		options.CredentialFile = testClientOptions.CredentialFile
+	}
+	if options.AccountId == "" {
+		options.AccountId = testClientOptions.AccountId
+	}
+	if options.ContainerId == "" {
+		options.ContainerId = testClientOptions.ContainerId
+	}
+	if options.RetryLimit == 0 {
+		options.RetryLimit = 10 // Higher retry limit for tests
+	}
+
+	return options
 }
 
 func newTestClient(t *testing.T) *Client {
-	client, err := NewClient(testClientOptions)
+	client, err := NewClient(setupTestClientOptions())
 
 	assert.Nil(t, err)
 	return client
@@ -130,7 +152,7 @@ func TestClientTagCRUD(t *testing.T) {
 		Type:  "gaawe",
 		Parameter: []*tagmanager.Parameter{
 			{Key: "eventName", Value: "test", Type: "template"},
-			{Key: "measurementId", Value: "test", Type: "template"},
+			{Key: "measurementIdOverride", Value: "G-XXXXXX", Type: "template"},
 			{Key: "eventParameters", Type: "list", List: []*tagmanager.Parameter{
 				{Type: "map", Map: []*tagmanager.Parameter{
 					{Key: "name", Type: "template", Value: "name-v"},
@@ -154,7 +176,7 @@ func TestClientTagCRUD(t *testing.T) {
 		Type:  "gaawe",
 		Parameter: []*tagmanager.Parameter{
 			{Key: "eventName", Value: "test", Type: "template"},
-			{Key: "measurementId", Value: "test", Type: "template"},
+			{Key: "measurementIdOverride", Value: "G-XXXXXX", Type: "template"},
 		},
 	})
 	assert.NoError(t, err)

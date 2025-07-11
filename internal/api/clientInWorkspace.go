@@ -1,6 +1,8 @@
 package api
 
 import (
+	"os"
+
 	"google.golang.org/api/tagmanager/v2"
 )
 
@@ -10,10 +12,23 @@ type ClientInWorkspaceOptions struct {
 	WorkspaceId   string
 }
 
+// NewClientInWorkspaceOptionsFromEnv creates ClientInWorkspaceOptions from environment variables
+func NewClientInWorkspaceOptionsFromEnv() *ClientInWorkspaceOptions {
+	return &ClientInWorkspaceOptions{
+		ClientOptions: NewClientOptionsFromEnv(),
+		WorkspaceName: os.Getenv(EnvWorkspaceName),
+	}
+}
+
 type ClientInWorkspace struct {
 	*Client
 
 	Options *ClientInWorkspaceOptions
+}
+
+// NewClientInWorkspaceFromEnv creates a new client in workspace using environment variables
+func NewClientInWorkspaceFromEnv() (*ClientInWorkspace, error) {
+	return NewClientInWorkspace(NewClientInWorkspaceOptionsFromEnv())
 }
 
 func NewClientInWorkspace(options *ClientInWorkspaceOptions) (*ClientInWorkspace, error) {
