@@ -4,13 +4,18 @@ import (
 	"context"
 	"terraform-provider-google-tag-manager/internal/api"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/api/tagmanager/v2"
 )
 
-var _ resource.ResourceWithConfigure = (*variableResource)(nil)
+var (
+	_ resource.Resource                = &variableResource{}
+	_ resource.ResourceWithConfigure   = &variableResource{}
+	_ resource.ResourceWithImportState = &variableResource{}
+)
 
 type variableResource struct {
 	client *api.ClientInWorkspace
@@ -167,23 +172,7 @@ func (r *variableResource) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 func (r *variableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	variableId := req.ID
-
-	if variableId == "" {
-		resp.Diagnostics.AddError("Invalid Import ID", "The import ID cannot be empty.")
-		return
-	}
-
-	variable, err := r.client.Variable(variableId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Importing Variable", err.Error())
-		return
-	}
-
-	resource := toResourceVariable(variable)
-
-	diags := resp.State.Set(ctx, &resource)
-	resp.Diagnostics.Append(diags...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Equal compares the two models and returns true if they are equal.

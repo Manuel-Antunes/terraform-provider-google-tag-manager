@@ -4,6 +4,8 @@ import (
 	"context"
 	"terraform-provider-google-tag-manager/internal/api"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -11,7 +13,11 @@ import (
 )
 
 // Interace adoption checks
-var _ resource.ResourceWithConfigure = (*tagResource)(nil)
+var (
+	_ resource.Resource                = &tagResource{}
+	_ resource.ResourceWithConfigure   = &tagResource{}
+	_ resource.ResourceWithImportState = &tagResource{}
+)
 
 type tagResource struct {
 	client *api.ClientInWorkspace
@@ -146,30 +152,7 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 }
 
 func (r *tagResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	if req.ID == "" {
-		resp.Diagnostics.AddError(
-			"Resource Import Missing ID",
-			"This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				"Resource ImportState method call to ImportState with an empty ID is not allowed.",
-		)
-		return
-	}
-	tag, err := r.client.Tag(req.ID)
-	if err == nil {
-		resp.Diagnostics.AddError(
-			"Resource Import Failed",
-			"Failed to import tag with ID "+req.ID+". The tag does not exist or the ID is invalid.",
-		)
-		return
-	}
-
-	plan := toResourceTag(tag)
-
-	diags := resp.State.Set(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Delete deletes the resource and removes the Terraform state on success.

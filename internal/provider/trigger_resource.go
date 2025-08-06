@@ -4,13 +4,18 @@ import (
 	"context"
 	"terraform-provider-google-tag-manager/internal/api"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/api/tagmanager/v2"
 )
 
-var _ resource.ResourceWithConfigure = (*triggerResource)(nil)
+var (
+	_ resource.Resource                = &triggerResource{}
+	_ resource.ResourceWithConfigure   = &triggerResource{}
+	_ resource.ResourceWithImportState = &triggerResource{}
+)
 
 type triggerResource struct {
 	client *api.ClientInWorkspace
@@ -163,23 +168,7 @@ func (r *triggerResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *triggerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	triggerId := req.ID
-
-	if triggerId == "" {
-		resp.Diagnostics.AddError("Error Importing Trigger", "Trigger ID cannot be empty")
-		return
-	}
-
-	trigger, err := r.client.Trigger(triggerId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Importing Trigger", err.Error())
-		return
-	}
-
-	resource := toResourceTrigger(trigger)
-
-	diags := resp.State.Set(ctx, &resource)
-	resp.Diagnostics.Append(diags...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Equal compares the trigger resource model with the given resource model
