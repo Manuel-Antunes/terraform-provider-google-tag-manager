@@ -33,11 +33,3 @@ resource "gtm_workspace" "example" {
 ### Read-Only
 
 - `id` (String) The ID of the workspace.
-
-## Import
-
-GTM Workspaces can be imported using the workspace ID, e.g.
-
-```
-$ terraform import gtm_workspace.example 123456
-```
