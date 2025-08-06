@@ -17,7 +17,7 @@ terraform {
   required_providers {
     gtm = {
       source  = "Manuel-Antunes/google-tag-manager"
-      version = ">= 0.1.0"
+      version = ">= 0.1.1"
     }
   }
 }
